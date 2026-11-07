@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: ghcr.io/pouzor/homelable-frontend:latest@sha256:e6748fe73ce62d045af7332d16a888b8b9eafac1768d96b8a57e6a1bad878eb6
+        image: ghcr.io/pouzor/homelable-frontend:latest@sha256:edb040f2bfe172d155643e190cb2f9eadc7d140a2300f88d7ed8dc7bdd5acfd7
         resources:
           requests:
             cpu: 10m
