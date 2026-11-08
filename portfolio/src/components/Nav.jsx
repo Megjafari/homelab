@@ -45,7 +45,7 @@ export default function Nav({ state }) {
         </button>
       </header>
 
-      <div className={`menu-sheet${open ? " open" : ""}`} id="menu" inert={open ? undefined : ""}>
+      <div className={`menu-sheet${open ? " open" : ""}`} id="menu" inert={!open}>
         <nav aria-label="Menu" onClick={(e) => e.target.closest("a") && setOpen(false)}>
           {LINKS.map((l, i) => (
             <a key={l.href} href={l.href} style={{ "--i": i }}>
