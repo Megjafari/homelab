@@ -59,7 +59,7 @@ spec:
         ports:
         - containerPort: 8080
       - name: qbittorrent
-        image: lscr.io/linuxserver/qbittorrent:latest@sha256:75ecbb1c89ab7b0a21c4bde40b4820e4f1649d2d56d83b91913422155e8d2a5f
+        image: lscr.io/linuxserver/qbittorrent:latest@sha256:3d4c4545d51a690a0df15a2ff99038823a88a9822df8e794526447b9afbd7384
         resources:
           requests:
             cpu: 100m
