@@ -83,7 +83,9 @@ export default function Post() {
     );
   }
 
-  const { words, minutes } = estimateReadingStats(contentHtml);
+  const { words } = estimateReadingStats(contentHtml);
+  // The same number as on the start page, which is worked out when the site is built.
+  const minutes = post.readingMinutes;
 
   return (
     <div className="mx-auto grid max-w-5xl grid-cols-1 gap-12 px-6 pt-28 pb-14 lg:grid-cols-[minmax(0,1fr)_240px]">

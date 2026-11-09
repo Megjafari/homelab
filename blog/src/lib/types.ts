@@ -6,6 +6,7 @@ export interface PostListItem {
   heroImageUrl: string | null;
   publishedAt: string | null;
   tags: string[];
+  readingMinutes: number;
 }
 
 export interface PostDetail extends PostListItem {

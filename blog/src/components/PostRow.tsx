@@ -11,11 +11,15 @@ export default function PostRow({ post }: { post: PostListItem }) {
       <h2 className="text-[clamp(24px,3.4vw,34px)] leading-[1.08] font-medium tracking-[-0.035em] text-fg transition-colors">
         {post.title}
       </h2>
-      {post.publishedAt && (
-        <time dateTime={post.publishedAt} className="mt-2 block text-sm text-fg-muted">
-          {formatDate(post.publishedAt)}
-        </time>
-      )}
+      <p className="mt-2 flex flex-wrap items-center gap-x-2 text-sm text-fg-muted">
+        {post.publishedAt && (
+          <>
+            <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
+            <span aria-hidden="true">·</span>
+          </>
+        )}
+        <span>{post.readingMinutes} min read</span>
+      </p>
       {post.excerpt && <p className="mt-4 max-w-[58ch] leading-relaxed text-fg-muted">{post.excerpt}</p>}
       {post.tags.length > 0 && (
         <ul className="mt-4 flex flex-wrap gap-1.5">
