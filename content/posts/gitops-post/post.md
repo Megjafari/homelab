@@ -145,8 +145,6 @@ That has a consequence for components I installed before I had this workflow: th
 
 Applying them with sync enabled would let Argo CD replace running infrastructure based on my reconstruction of how it was installed, and my reconstruction might be wrong. So I open each in the UI, check that the diff is empty or harmless, and sync it once. The NFS provisioner, for example, is described as a Helm chart pinned to version `4.0.18`, with the server address and the `nfs-storage` StorageClass as values.
 
-![All 15 Argo CD Applications, Healthy and Synced. The four with a version tag instead of HEAD are the components I adopted and sync by hand.](argocd-applications.png)
-
 Syncing them was not always smooth. The first sync of `flannel` failed on one resource, the DaemonSet, with `spec.selector: field is immutable`. The running DaemonSet had been installed from an older manifest and selected pods with two labels, `app` and `k8s-app`. The manifest at the version I had pinned only has `app`. A selector cannot be changed, so Argo CD could never make them match. I deleted the DaemonSet with `--cascade=orphan`, which leaves the pods running, and synced it again from Git. The new DaemonSet adopted the running pods, and nothing restarted. The steps are in [`docs/cluster-components.md`](https://github.com/Megjafari/home-ops/blob/main/docs/cluster-components.md).
 
 ## Two settings that are off on purpose
@@ -221,7 +219,7 @@ Three lines in this file carry most of what I have learned, and I come back to t
 | `ansible-lint` | ansible-lint | Problems in the host playbooks |
 | `secret-scan` | gitleaks v8.24.3 | Passwords and keys in the full Git history |
 
-![A pull request with all checks passed: Terraform, ansible-lint, kube-linter, kubeconform, secret-scan and yaml-lint. The pull request has two more checks from Vercel.](pr-checks.png)
+![A pull request with all eight checks passed: Terraform, the five Validate manifests jobs, and two from Vercel.](pr-checks.png)
 
 `kubeconform` runs with `-ignore-missing-schemas`. I first tried it with a catalog of CRD schemas, but it rejected the output of Sealed Secrets, so I dropped the catalog. The cost is that custom resources such as `SealedSecret` and `Application` are not schema-checked.
 

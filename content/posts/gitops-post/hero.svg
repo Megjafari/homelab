@@ -1,58 +1,110 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1050" viewBox="0 0 1400 1050" font-family="Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="672" viewBox="0 0 1600 672" font-family="Helvetica, Arial, sans-serif">
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8e8e98"/></marker>
-    <marker id="arrow-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#5c5c66"/></marker>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8a6f55"/></marker>
+    <marker id="arrow-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#b8a78f"/></marker>
   </defs>
-  <rect width="1400" height="1050" fill="#09090b"/>
 
-  <text x="70" y="150" fill="#ededef" font-size="64" font-weight="700">From pull request</text>
-  <text x="70" y="226" fill="#ededef" font-size="64" font-weight="700">to cluster</text>
-  <text x="70" y="282" fill="#8e8e98" font-size="28">How a change reaches my homelab with Argo CD</text>
+  <!-- Paper surface with a thin edge -->
+  <rect width="1600" height="672" fill="#fbf8f2"/>
+  <rect x="1" y="1" width="1598" height="670" fill="none" stroke="#d9d0c1" stroke-width="2"/>
 
+
+  <g transform="translate(0,-240)">
   <!-- Renovate -->
-  <rect x="55" y="400" width="260" height="104" rx="14" fill="#101014" stroke="#2b2b33" stroke-width="2"/>
-  <text x="80" y="446" fill="#ededef" font-size="26" font-weight="600">Renovate</text>
-  <text x="80" y="480" fill="#8e8e98" font-size="19">opens PRs on Saturdays</text>
-  <path d="M160 504 L160 568" stroke="#5c5c66" stroke-width="2.5" stroke-dasharray="7 7" marker-end="url(#arrow-dim)" fill="none"/>
+  <rect x="64" y="304" width="410" height="104" rx="16" fill="#f4efe6" stroke="#d9d0c1" stroke-width="2"/>
+  <circle cx="122" cy="356" r="30" fill="#9a4a2a"/>
+  <rect x="106" y="346" width="32" height="22" rx="7" fill="#fbf8f2"/>
+  <circle cx="114" cy="357" r="3.4" fill="#9a4a2a"/>
+  <circle cx="130" cy="357" r="3.4" fill="#9a4a2a"/>
+  <line x1="122" y1="346" x2="122" y2="338" stroke="#fbf8f2" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="122" cy="336" r="3.2" fill="#fbf8f2"/>
+  <text x="172" y="348" fill="#1c1815" font-size="28" font-weight="700">Renovate</text>
+  <text x="172" y="382" fill="#5a5046" font-size="21">Opens PRs on Saturdays</text>
+  <path d="M190 408 L190 482" stroke="#b8a78f" stroke-width="2.5" stroke-dasharray="7 7" marker-end="url(#arrow-dim)" fill="none"/>
 
-  <!-- Flow boxes -->
-  <g fill="#18181d" stroke="#34343c" stroke-width="2">
-    <rect x="55" y="570" width="210" height="150" rx="14"/>
-    <rect x="325" y="570" width="210" height="150" rx="14"/>
-    <rect x="595" y="570" width="210" height="150" rx="14"/>
-    <rect x="865" y="570" width="210" height="150" rx="14"/>
-    <rect x="1135" y="570" width="210" height="150" rx="14"/>
+  <!-- Flow cards -->
+  <g fill="#f4efe6" stroke="#d9d0c1" stroke-width="2">
+    <rect x="64" y="490" width="250" height="220" rx="16"/>
+    <rect x="369" y="490" width="250" height="220" rx="16"/>
+    <rect x="674" y="490" width="250" height="220" rx="16"/>
+    <rect x="1284" y="490" width="250" height="220" rx="16"/>
+  </g>
+  <rect x="979" y="490" width="250" height="220" rx="16" fill="#f6e7da" stroke="#9a4a2a" stroke-width="3"/>
+
+  <!-- Icon: pull request -->
+  <g stroke="#1c1815" stroke-width="3.5" fill="#f4efe6" stroke-linecap="round">
+    <line x1="177" y1="540" x2="177" y2="572" fill="none"/>
+    <circle cx="177" cy="536" r="6.5"/>
+    <circle cx="177" cy="580" r="6.5"/>
+    <circle cx="203" cy="568" r="6.5"/>
+    <path d="M203 561 C203 548 190 548 183 543" fill="none"/>
+  </g>
+  <!-- Icon: CI checks -->
+  <circle cx="494" cy="558" r="28" fill="#3c6e47"/>
+  <path d="M481 558 L491 568 L508 548" fill="none" stroke="#fbf8f2" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Icon: merge -->
+  <g stroke="#1c1815" stroke-width="3.5" fill="#f4efe6" stroke-linecap="round">
+    <line x1="787" y1="540" x2="787" y2="574" fill="none"/>
+    <circle cx="787" cy="536" r="6.5"/>
+    <circle cx="787" cy="580" r="6.5"/>
+    <circle cx="813" cy="566" r="6.5"/>
+    <path d="M787 546 C787 564 806 560 807 563" fill="none"/>
+  </g>
+  <!-- Icon: sync (Argo CD) -->
+  <g fill="none" stroke="#9a4a2a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1136 548 A24 24 0 0 0 1094 552"/>
+    <path d="M1094 568 A24 24 0 0 0 1136 572"/>
+  </g>
+  <path d="M1141 537 L1139 552 L1124 549 Z" fill="#9a4a2a"/>
+  <path d="M1089 583 L1091 568 L1106 571 Z" fill="#9a4a2a"/>
+  <!-- Icon: Kubernetes -->
+  <path d="M1409 530 L1435 543 L1441 571 L1423 593 L1395 593 L1377 571 L1383 543 Z" fill="#4a3427"/>
+  <g stroke="#fbf8f2" stroke-width="3" stroke-linecap="round" fill="none">
+    <circle cx="1409" cy="563" r="13"/>
+    <line x1="1409" y1="563" x2="1409" y2="545"/>
+    <line x1="1409" y1="563" x2="1423" y2="552"/>
+    <line x1="1409" y1="563" x2="1428" y2="565"/>
+    <line x1="1409" y1="563" x2="1420" y2="579"/>
+    <line x1="1409" y1="563" x2="1398" y2="579"/>
+    <line x1="1409" y1="563" x2="1390" y2="565"/>
+    <line x1="1409" y1="563" x2="1395" y2="552"/>
   </g>
 
-  <g fill="#ededef" font-size="28" font-weight="600">
-    <text x="80" y="628">Pull request</text>
-    <text x="350" y="628">CI checks</text>
-    <text x="620" y="628">Merge</text>
-    <text x="890" y="628">Argo CD</text>
-    <text x="1160" y="628">Kubernetes</text>
+  <!-- Card titles -->
+  <g fill="#1c1815" font-size="32" font-weight="700" text-anchor="middle">
+    <text x="189" y="630">Pull request</text>
+    <text x="494" y="630">CI checks</text>
+    <text x="799" y="630">Merge</text>
+    <text x="1104" y="630" fill="#9a4a2a">Argo CD</text>
+    <text x="1409" y="630">Kubernetes</text>
   </g>
-  <g fill="#8e8e98" font-size="19">
-    <text x="80" y="666">YAML on a branch</text>
-    <text x="80" y="694">reviewed in Git</text>
-    <text x="350" y="666">lint, schema,</text>
-    <text x="350" y="694">secret scan</text>
-    <text x="620" y="666">main is the</text>
-    <text x="620" y="694">source of truth</text>
-    <text x="890" y="666">compares Git</text>
-    <text x="890" y="694">with the cluster</text>
-    <text x="1160" y="666">nuke and tank</text>
-    <text x="1160" y="694">run the apps</text>
+  <g fill="#5a5046" font-size="21" text-anchor="middle">
+    <text x="189" y="662">YAML on a branch</text>
+    <text x="189" y="688">reviewed in Git</text>
+    <text x="494" y="662">lint, schema,</text>
+    <text x="494" y="688">secret scan</text>
+    <text x="799" y="662">main is the</text>
+    <text x="799" y="688">source of truth</text>
+    <text x="1104" y="662">compares Git</text>
+    <text x="1104" y="688">with the cluster</text>
+    <text x="1409" y="662">nuke and tank</text>
+    <text x="1409" y="688">run the apps</text>
   </g>
 
   <!-- Arrows -->
-  <g stroke="#8e8e98" stroke-width="3" fill="none" marker-end="url(#arrow)">
-    <path d="M265 645 L323 645"/>
-    <path d="M535 645 L593 645"/>
-    <path d="M805 645 L863 645"/>
-    <path d="M1075 645 L1133 645"/>
+  <g stroke="#8a6f55" stroke-width="3" fill="none" marker-end="url(#arrow)">
+    <path d="M322 600 L361 600"/>
+    <path d="M627 600 L666 600"/>
+    <path d="M932 600 L971 600"/>
+    <path d="M1237 600 L1276 600"/>
   </g>
 
-  <!-- Footer line -->
-  <text x="70" y="880" fill="#ededef" font-size="34" font-weight="600">The repository is the only way in.</text>
-  <text x="70" y="926" fill="#8e8e98" font-size="24">No kubectl apply. Git describes what runs, and the cluster follows.</text>
+  <!-- Info bar -->
+  <rect x="64" y="748" width="1472" height="100" rx="16" fill="#efe6d6" stroke="#d9d0c1" stroke-width="2"/>
+  <circle cx="122" cy="798" r="22" fill="#9a4a2a"/>
+  <text x="122" y="807" fill="#fbf8f2" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="700" text-anchor="middle">i</text>
+  <line x1="170" y1="766" x2="170" y2="830" stroke="#b8a78f" stroke-width="2"/>
+  <text x="198" y="790" fill="#1c1815" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700">The repository is the only way in.</text>
+  <text x="198" y="826" fill="#5a5046" font-size="22">No kubectl apply. Git describes what runs, and the cluster follows.</text>
+  </g>
 </svg>
