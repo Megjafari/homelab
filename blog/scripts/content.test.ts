@@ -1,6 +1,25 @@
 import { describe, expect, it } from "vitest";
 // @ts-expect-error plain .mjs build script without type declarations
-import { buildTags, parseFrontmatter, renderRss, rewriteRelativeImages } from "./content.mjs";
+import { buildTags, estimateReadingMinutes, parseFrontmatter, renderRss, rewriteRelativeImages } from "./content.mjs";
+
+describe("estimateReadingMinutes", () => {
+  it("is never less than one minute", () => {
+    expect(estimateReadingMinutes("")).toBe(1);
+    expect(estimateReadingMinutes("A few words only.")).toBe(1);
+  });
+
+  it("counts 200 words a minute and rounds", () => {
+    expect(estimateReadingMinutes("word ".repeat(400))).toBe(2);
+    expect(estimateReadingMinutes("word ".repeat(500))).toBe(3);
+  });
+
+  it("ignores Markdown syntax, image links and link targets", () => {
+    const words = "word ".repeat(200);
+    const markdown = `## Heading\n\n- ${words}\n\n![diagram](diagram.png)\n\n[a link](https://example.com/some/long/path)\n\n| a | b |\n| - | - |`;
+    // 200 words + "Heading" + "a link" + a, b = 205 words, one minute
+    expect(estimateReadingMinutes(markdown)).toBe(1);
+  });
+});
 
 describe("parseFrontmatter", () => {
   it("reads strings, quoted strings and lists", () => {

@@ -30,6 +30,20 @@ function parseValue(raw) {
   return raw;
 }
 
+/**
+ * Minutes it takes to read a post, at 200 words a minute and never less than one.
+ * The start page only has the post list, not the post text, so the number is worked
+ * out here and shipped with the list. The post page shows the same number.
+ */
+export function estimateReadingMinutes(markdown) {
+  const text = markdown
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/[#>*`|]/g, " ");
+  const words = text.split(/\s+/).filter((word) => /[\p{L}\p{N}]/u.test(word)).length;
+  return Math.max(1, Math.round(words / 200));
+}
+
 /** Points relative image links at where the build copies the post's files. */
 export function rewriteRelativeImages(markdown, slug) {
   return markdown.replace(/(!\[[^\]]*\]\()(?!https?:|\/|#|data:)([^)\s]+)(\))/g, `$1/posts/${slug}/$2$3`);
@@ -63,6 +77,7 @@ export function readPosts(contentDir) {
       publishedAt: new Date(data.date).toISOString(),
       updatedAt: new Date(data.updated || data.date).toISOString(),
       tags: Array.isArray(data.tags) ? data.tags : [],
+      readingMinutes: estimateReadingMinutes(body),
       status: "Published",
       content: rewriteRelativeImages(body.trim(), slug),
     };
