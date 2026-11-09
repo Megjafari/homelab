@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1050" viewBox="0 0 1400 1050" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8e8e98"/></marker>
+    <marker id="arrow-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#5c5c66"/></marker>
+  </defs>
+  <rect width="1400" height="1050" fill="#09090b"/>
+
+  <text x="70" y="150" fill="#ededef" font-size="64" font-weight="700">From pull request</text>
+  <text x="70" y="226" fill="#ededef" font-size="64" font-weight="700">to cluster</text>
+  <text x="70" y="282" fill="#8e8e98" font-size="28">How a change reaches my homelab with Argo CD</text>
+
+  <!-- Renovate -->
+  <rect x="55" y="400" width="260" height="104" rx="14" fill="#101014" stroke="#2b2b33" stroke-width="2"/>
+  <text x="80" y="446" fill="#ededef" font-size="26" font-weight="600">Renovate</text>
+  <text x="80" y="480" fill="#8e8e98" font-size="19">opens PRs on Saturdays</text>
+  <path d="M160 504 L160 568" stroke="#5c5c66" stroke-width="2.5" stroke-dasharray="7 7" marker-end="url(#arrow-dim)" fill="none"/>
+
+  <!-- Flow boxes -->
+  <g fill="#18181d" stroke="#34343c" stroke-width="2">
+    <rect x="55" y="570" width="210" height="150" rx="14"/>
+    <rect x="325" y="570" width="210" height="150" rx="14"/>
+    <rect x="595" y="570" width="210" height="150" rx="14"/>
+    <rect x="865" y="570" width="210" height="150" rx="14"/>
+    <rect x="1135" y="570" width="210" height="150" rx="14"/>
+  </g>
+
+  <g fill="#ededef" font-size="28" font-weight="600">
+    <text x="80" y="628">Pull request</text>
+    <text x="350" y="628">CI checks</text>
+    <text x="620" y="628">Merge</text>
+    <text x="890" y="628">Argo CD</text>
+    <text x="1160" y="628">Kubernetes</text>
+  </g>
+  <g fill="#8e8e98" font-size="19">
+    <text x="80" y="666">YAML on a branch</text>
+    <text x="80" y="694">reviewed in Git</text>
+    <text x="350" y="666">lint, schema,</text>
+    <text x="350" y="694">secret scan</text>
+    <text x="620" y="666">main is the</text>
+    <text x="620" y="694">source of truth</text>
+    <text x="890" y="666">compares Git</text>
+    <text x="890" y="694">with the cluster</text>
+    <text x="1160" y="666">nuke and tank</text>
+    <text x="1160" y="694">run the apps</text>
+  </g>
+
+  <!-- Arrows -->
+  <g stroke="#8e8e98" stroke-width="3" fill="none" marker-end="url(#arrow)">
+    <path d="M265 645 L323 645"/>
+    <path d="M535 645 L593 645"/>
+    <path d="M805 645 L863 645"/>
+    <path d="M1075 645 L1133 645"/>
+  </g>
+
+  <!-- Footer line -->
+  <text x="70" y="880" fill="#ededef" font-size="34" font-weight="600">The repository is the only way in.</text>
+  <text x="70" y="926" fill="#8e8e98" font-size="24">No kubectl apply. Git describes what runs, and the cluster follows.</text>
+</svg>

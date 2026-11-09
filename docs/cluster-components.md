@@ -31,6 +31,38 @@ What each one reproduces from the running cluster:
 - **NVIDIA device plugin**: the upstream static manifest at the tag. The
   running DaemonSet has no extra arguments.
 
+### Flannel: the DaemonSet selector was immutable
+
+The first sync of `flannel` (2026-11-09) failed on one resource:
+
+```text
+DaemonSet.apps "kube-flannel-ds" is invalid: spec.selector: ... field is immutable
+```
+
+The running DaemonSet had been installed from an older manifest and selected
+pods with both `app: flannel` and `k8s-app: flannel`. The v0.28.9 manifest only
+has `app: flannel`. A DaemonSet selector cannot be changed, so ArgoCD could
+never make the two match, and `flannel` stayed OutOfSync with "Sync failed".
+The other Flannel resources were already in sync.
+
+It was fixed by recreating the DaemonSet from Git without touching the pods:
+
+1. Back up the live object: `kubectl -n kube-flannel get ds kube-flannel-ds -o yaml > backup.yaml`.
+2. `kubectl -n kube-flannel delete ds kube-flannel-ds --cascade=orphan`. The
+   `--cascade=orphan` flag deletes only the DaemonSet and leaves the pods
+   running, so the pod network is not interrupted.
+3. Sync only `DaemonSet/kube-flannel-ds` in ArgoCD, without Prune, Force or
+   Replace. The new DaemonSet adopts the running pods, because they match its
+   selector.
+
+The pod template hash did not change, so the pods were not restarted. The
+DaemonSet showed `DESIRED 2`, `READY 2`, `UP-TO-DATE 2`, and both pods were
+owned by `kube-flannel-ds`.
+
+Other adopted components can hit the same problem. If a sync fails with
+"field is immutable", compare the live selector with the one in Git before
+retrying.
+
 ## Installed with a command
 
 ArgoCD, Sealed Secrets and Reloader are not managed by ArgoCD. The live
