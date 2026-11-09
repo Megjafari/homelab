@@ -100,7 +100,7 @@ I will write about each of these in its own post.
 Three things I want to write about in detail:
 
 1. **Set the hostname before a node joins the cluster.** I renamed a node after it had joined. Its certificate was made for the old name, so Kubernetes rejected it. I had to reset the node and join it again.
-2. **Keep the configuration in Git.** When I moved the cluster to a new subnet, the certificates were tied to the old IP addresses and I rebuilt the cluster. Because the apps are defined in Git, Argo CD brought them back.
+2. **Keep the configuration in Git.** When I moved the cluster to a new subnet, the certificates were tied to the old IP addresses and I rebuilt the cluster. Because the app manifests are in Git, Argo CD could roll them out again once I had recreated the Applications.
 3. **A single network port is a poor base for a router.** That is the Dell Wyse story above.
 
 ## Paused: local AI
