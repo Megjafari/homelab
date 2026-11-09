@@ -5,7 +5,6 @@ excerpt: "How a change goes from a pull request to my Kubernetes homelab with Ar
 date: 2026-11-09T15:00:00Z
 tags: [homelab, kubernetes, gitops, argocd, devops]
 hero: hero.png
-draft: true
 ---
 ## Introduction
 
