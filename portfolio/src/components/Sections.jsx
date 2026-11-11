@@ -123,7 +123,7 @@ export function Footer() {
       <ul className="foot-links rv" style={{ "--i": 3 }}>
         <li><a href={GITHUB} target="_blank" rel="noopener noreferrer">GitHub <span className="arrow">↗︎</span></a></li>
         <li><a href={LINKEDIN} target="_blank" rel="noopener noreferrer">LinkedIn <span className="arrow">↗︎</span></a></li>
-        <li><a href="/cv-english.pdf" download="Meghdad-Jafari-CV.pdf">CV <span className="arrow">↓</span></a></li>
+        <li><a href="/Meghdad-Jafari-eng.pdf" download="Meghdad-Jafari-eng.pdf">CV <span className="arrow">↓</span></a></li>
       </ul>
       <div className="foot-end">
         <span>© 2026 Meghdad Jafari</span>
