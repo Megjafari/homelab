@@ -92,6 +92,14 @@ This allows the GPU node to be recovered after a fresh installation or when the 
 
 `run.sh` handles the Python/Ansible environment so Ansible does not need to be installed globally.
 
+Ansible 14 needs **Python 3.12 or newer** on the machine that runs it. `run.sh` picks the newest of `python3.14`, `python3.13`, `python3.12` and `python3` that is new enough. To choose one yourself, set `PYTHON`:
+
+```bash
+PYTHON=/opt/homebrew/bin/python3.14 ./run.sh --check
+```
+
+If the virtualenv in `.ansible-venv/` was made with an older Python, `run.sh` recreates it.
+
 Run a dry run first:
 
 ```bash
