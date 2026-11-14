@@ -5,6 +5,12 @@ export const REPO = "https://github.com/Megjafari/homelab";
 export const BLOG = "https://blog.meghdadjafari.dev";
 export const STATUS = "Available · Gothenburg & remote";
 
+// CV files live in public/. The first one is listed first in the dropdown.
+export const CV_FILES = [
+  { label: "English", file: "Meghdad-Jafari-Resume.pdf" },
+  { label: "Svenska", file: "Meghdad-Jafari-cv.pdf" },
+];
+
 export const FLIPS = [
   { word: "fullstack apps", sub: "C#/.NET and React, from the database to the interface." },
   { word: "reliable APIs", sub: "Backend systems and Web APIs that are clean and easy to run." },

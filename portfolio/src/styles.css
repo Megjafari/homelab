@@ -217,6 +217,14 @@ a:hover .arrow { transform: translateX(3px); }
 .foot-links { list-style: none; display: flex; flex-wrap: wrap; gap: 26px; padding: 0; margin: 38px 0 0; }
 .foot-links a { font-size: 17px; border-bottom: 1px solid transparent; transition: border-color 160ms ease; }
 .foot-links a:hover { border-color: var(--faint); }
+.cv-menu { position: relative; }
+.cv-button { padding: 0; border: 0; border-bottom: 1px solid transparent; background: none; font: inherit; font-size: 17px; color: inherit; cursor: pointer; transition: border-color 160ms ease; }
+.cv-button:hover, .cv-button[aria-expanded="true"] { border-color: var(--faint); }
+.cv-button:hover .arrow, .cv-button[aria-expanded="true"] .arrow { transform: translateX(3px); }
+.cv-list { position: absolute; z-index: 5; top: calc(100% + 10px); left: 0; min-width: 150px; max-width: calc(100vw - 40px); margin: 0; padding: 6px; list-style: none; border: 1px solid var(--line); border-radius: 14px; background: color-mix(in srgb, var(--bg2) 94%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.7); animation: cv-in 160ms var(--ease-out); }
+.cv-list a { display: block; padding: 10px 14px; border-radius: 9px; font-size: 15px; color: var(--ink); border-bottom: 0; transition: background-color 140ms ease; }
+.cv-list a:hover, .cv-list a:focus-visible { background: var(--chip); }
+@keyframes cv-in { from { opacity: 0; transform: translate3d(0, -6px, 0); } to { opacity: 1; transform: none; } }
 .foot-end { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 110px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 13px; color: var(--faint); }
 .foot-end a:hover { color: var(--ink); }
 
@@ -294,6 +302,8 @@ a:hover .arrow { transform: translateX(3px); }
   .foot-status { font-size: 14px; margin-top: 20px; }
   .foot-links { gap: 20px; margin-top: 28px; }
   .foot-links a { font-size: 14px; }
+  .cv-button { font-size: 14px; }
+  .cv-list a { font-size: 14px; padding: 10px 12px; }
   .foot h2 { font-size: clamp(44px, 14vw, 72px); }
 }
 
@@ -301,6 +311,7 @@ a:hover .arrow { transform: translateX(3px); }
   html { scroll-behavior: auto; }
   .bg i { animation: none; }
   .cue i { animation: none; opacity: 1; transform: none; }
+  .cv-list { animation: none; }
   .js .rv, .js .rv.from-left, .js .rv.from-right { transform: none; transition: opacity 240ms ease; transition-delay: 0s; }
   .row-more { transition: opacity 200ms ease; }
   .menu-sheet nav a { transition: opacity 200ms ease; transform: none; }

@@ -80,4 +80,4 @@ src/
     Icons.jsx
 ```
 
-The two CV files in `public/` are not linked from the page yet.
+The CV is a dropdown in the footer (`src/components/CvMenu.jsx`). The files are in `public/`: `Meghdad-Jafari-Resume.pdf` (English) and `Meghdad-Jafari-cv.pdf` (Swedish). The list is `CV_FILES` in `src/data.js`.

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ABOUT, BLOG, EMAIL, GITHUB, HOMELAB, LINKEDIN, POSTS, PROJECTS, REPO, SKILLS } from "../data.js";
+import CvMenu from "./CvMenu.jsx";
 import Rows from "./Rows.jsx";
 import TextReveal from "./TextReveal.jsx";
 import { CheckIcon, CopyIcon } from "./Icons.jsx";
@@ -123,7 +124,7 @@ export function Footer() {
       <ul className="foot-links rv" style={{ "--i": 3 }}>
         <li><a href={GITHUB} target="_blank" rel="noopener noreferrer">GitHub <span className="arrow">↗︎</span></a></li>
         <li><a href={LINKEDIN} target="_blank" rel="noopener noreferrer">LinkedIn <span className="arrow">↗︎</span></a></li>
-        <li><a href="/Meghdad-Jafari-eng.pdf" download="Meghdad-Jafari-eng.pdf">CV <span className="arrow">↓</span></a></li>
+        <li><CvMenu /></li>
       </ul>
       <div className="foot-end">
         <span>© 2026 Meghdad Jafari</span>
