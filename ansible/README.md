@@ -31,7 +31,8 @@ ansible/
 └── roles/
     ├── common/            # Baseline packages on every node
     ├── k8s_node_prereqs/  # Kubernetes host prerequisites
-    └── nvidia_gpu/        # NVIDIA driver and DKMS configuration
+    ├── nvidia_gpu/        # NVIDIA driver and DKMS configuration
+    └── crash_diagnostics/ # Evidence for unexplained shutdowns and network loss
 ```
 
 ## Inventory
@@ -88,6 +89,17 @@ The role:
 
 This allows the GPU node to be recovered after a fresh installation or when the NVIDIA kernel module needs to be rebuilt after a kernel update.
 
+### `crash_diagnostics`
+
+Runs on every host, including the Proxmox host `pve`. It records evidence and changes no behaviour:
+
+* Makes the journal persistent and flushes it every 10 seconds
+* `health-snapshot` runs every minute and logs one line to `/var/log/health/health.log` (and the journal): load, memory, temperatures, fans, AC/battery, NIC state and error counters, GPU, and ping results. The file is fsync'd, so after a hard power-off the last line shows the final minute
+* When no ping target answers it logs `EVENT network_down` and writes a full dump (`ip`, `ethtool`, offloads, kernel log) to `/var/log/health/netfail-*.log`
+* `crash-report` summarises the previous boot: clean or hard shutdown, lid and power-key events, kernel errors (NIC hangs, thermal, MCE, OOM, Xid, disks), and the last health lines
+
+After the next incident, SSH in and run `crash-report`.
+
 ## Usage
 
 `run.sh` handles the Python/Ansible environment so Ansible does not need to be installed globally.
@@ -142,6 +154,7 @@ k8s
 swap
 cni
 gpu
+diag
 ```
 
 ## When to run this

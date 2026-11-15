@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+# Managed by Ansible (roles/crash_diagnostics).
+#
+# Runs once a minute from health-snapshot.timer and writes ONE line describing
+# the machine: load, memory, temperatures, fans, power/battery, NIC state and
+# error counters, GPU, and whether the LAN/internet is reachable.
+#
+# The file is fsync'd on every run, so after a hard power-off the last line
+# shows what the machine looked like in its final minute. When the network
+# goes away it also writes a detailed dump to /var/log/health/netfail-*.log.
+set -u
+
+[ -r /etc/default/health-snapshot ] && . /etc/default/health-snapshot
+PING_TARGETS="${PING_TARGETS:-192.168.1.1}"
+PING_EXTRA="${PING_EXTRA:-1.1.1.1}"
+LOG_DIR=/var/log/health
+LOG="$LOG_DIR/health.log"
+STATE=/run/health-snapshot.net-state
+DUMP_STAMP=/run/health-snapshot.last-dump
+
+mkdir -p "$LOG_DIR"
+
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# --- basics -----------------------------------------------------------------
+read -r l1 l5 l15 _ < /proc/loadavg
+uptime_s=$(cut -d' ' -f1 /proc/uptime)
+mem_avail_mb=$(awk '/^MemAvailable/ {print int($2/1024)}' /proc/meminfo)
+swap_used_mb=$(awk '/^SwapTotal/ {t=$2} /^SwapFree/ {f=$2} END {print int((t-f)/1024)}' /proc/meminfo)
+
+# --- temperatures and fans --------------------------------------------------
+temp_max=0
+for f in /sys/class/hwmon/hwmon*/temp*_input /sys/class/thermal/thermal_zone*/temp; do
+    [ -r "$f" ] || continue
+    v=$(cat "$f" 2>/dev/null) || continue
+    case "$v" in ''|*[!0-9]*) continue ;; esac
+    [ "$v" -gt "$temp_max" ] && temp_max=$v
+done
+temp_max_c=$((temp_max / 1000))
+
+fan_max=0
+for f in /sys/class/hwmon/hwmon*/fan*_input; do
+    [ -r "$f" ] || continue
+    v=$(cat "$f" 2>/dev/null) || continue
+    case "$v" in ''|*[!0-9]*) continue ;; esac
+    [ "$v" -gt "$fan_max" ] && fan_max=$v
+done
+
+# --- power (laptops: AC unplugged / battery draining is a classic cause) ----
+ac="n/a"; bat="n/a"
+for p in /sys/class/power_supply/*; do
+    [ -r "$p/type" ] || continue
+    case "$(cat "$p/type")" in
+        Mains) ac=$(cat "$p/online" 2>/dev/null || echo "?") ;;
+        Battery) bat="$(cat "$p/capacity" 2>/dev/null || echo "?")%/$(cat "$p/status" 2>/dev/null || echo "?")" ;;
+    esac
+done
+
+# --- physical NICs ----------------------------------------------------------
+nics=""
+for n in /sys/class/net/*; do
+    name=${n##*/}
+    [ -e "$n/device" ] || continue          # skip virtual interfaces
+    carrier=$(cat "$n/carrier" 2>/dev/null || echo "?")
+    oper=$(cat "$n/operstate" 2>/dev/null || echo "?")
+    speed=$(cat "$n/speed" 2>/dev/null || echo "?")
+    s="$n/statistics"
+    nics="$nics $name=$oper,carrier=$carrier,speed=${speed},rxerr=$(cat $s/rx_errors 2>/dev/null),txerr=$(cat $s/tx_errors 2>/dev/null),rxdrop=$(cat $s/rx_dropped 2>/dev/null),txdrop=$(cat $s/tx_dropped 2>/dev/null)"
+done
+
+# --- GPU --------------------------------------------------------------------
+gpu=""
+if have nvidia-smi; then
+    gpu=$(timeout 5 nvidia-smi --query-gpu=temperature.gpu,power.draw,utilization.gpu,clocks_throttle_reasons.active \
+        --format=csv,noheader,nounits 2>/dev/null | tr -d ' ')
+    [ -n "$gpu" ] || gpu="nvidia-smi-failed"
+fi
+
+# --- reachability -----------------------------------------------------------
+ok=0; total=0; ping_res=""
+for t in $PING_TARGETS; do
+    total=$((total + 1))
+    if ping -c1 -W1 "$t" >/dev/null 2>&1; then ok=$((ok + 1)); ping_res="$ping_res $t=up"
+    else ping_res="$ping_res $t=DOWN"; fi
+done
+for t in $PING_EXTRA; do
+    if ping -c1 -W1 "$t" >/dev/null 2>&1; then ping_res="$ping_res $t=up"
+    else ping_res="$ping_res $t=DOWN"; fi
+done
+
+ts=$(date -Is)
+line="$ts up=${uptime_s%.*}s load=$l1/$l5/$l15 mem_avail=${mem_avail_mb}MB swap_used=${swap_used_mb}MB temp_max=${temp_max_c}C fan_max=${fan_max}rpm ac=$ac bat=$bat gpu=${gpu:-n/a} ping:${ping_res} nic:${nics}"
+
+printf '%s\n' "$line" >> "$LOG"
+logger -t health-snapshot -- "$line"
+
+# --- network up/down transitions -------------------------------------------
+prev=$(cat "$STATE" 2>/dev/null || echo "up")
+if [ "$ok" -eq 0 ] && [ "$total" -gt 0 ]; then
+    cur=down
+else
+    cur=up
+fi
+echo "$cur" > "$STATE"
+
+if [ "$cur" = down ]; then
+    if [ "$prev" = up ]; then
+        printf '%s EVENT network_down (no PING_TARGETS reachable)\n' "$ts" >> "$LOG"
+        logger -t health-snapshot -p user.warning -- "EVENT network_down"
+    fi
+    # Dump details at most every 10 minutes while the outage lasts.
+    now=$(date +%s)
+    last=$(cat "$DUMP_STAMP" 2>/dev/null || echo 0)
+    if [ $((now - last)) -ge 600 ]; then
+        echo "$now" > "$DUMP_STAMP"
+        out="$LOG_DIR/netfail-$(date +%Y%m%d-%H%M%S).log"
+        {
+            echo "### netfail dump $ts"
+            echo; echo "## ip -s link";  ip -s link
+            echo; echo "## ip addr";     ip addr
+            echo; echo "## ip route";    ip route
+            echo; echo "## ip neigh";    ip neigh
+            for n in /sys/class/net/*; do
+                name=${n##*/}
+                [ -e "$n/device" ] || continue
+                if have ethtool; then
+                    echo; echo "## ethtool $name";    ethtool "$name"
+                    echo; echo "## ethtool -i $name"; ethtool -i "$name"
+                    echo; echo "## ethtool -k $name (offloads)"; ethtool -k "$name"
+                    echo; echo "## ethtool -S $name"; ethtool -S "$name"
+                fi
+            done
+            echo; echo "## kernel log (last 150 lines)"; dmesg -T 2>/dev/null | tail -150
+            echo; echo "## sensors"; have sensors && sensors
+        } > "$out" 2>&1
+        sync -f "$out" 2>/dev/null || true
+    fi
+elif [ "$prev" = down ]; then
+    printf '%s EVENT network_up\n' "$ts" >> "$LOG"
+    logger -t health-snapshot -p user.warning -- "EVENT network_up"
+fi
+
+sync -f "$LOG" 2>/dev/null || sync
+exit 0

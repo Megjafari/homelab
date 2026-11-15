@@ -1,0 +1,11 @@
+# Managed by Ansible (roles/crash_diagnostics).
+[Unit]
+Description=Run the health snapshot every minute
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=60s
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target

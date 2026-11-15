@@ -1,0 +1,9 @@
+# Managed by Ansible (roles/crash_diagnostics).
+[Unit]
+Description=Write one health snapshot line (temps, power, NIC, reachability)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/health-snapshot
+Nice=10
+TimeoutStartSec=60

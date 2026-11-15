@@ -1,5 +1,5 @@
-- name: Baseline configuration for all nodes
-  hosts: all
+- name: Baseline configuration for Kubernetes nodes
+  hosts: control_plane:workers
   become: true
   roles:
     - common
@@ -15,3 +15,9 @@
   become: true
   roles:
     - nvidia_gpu
+
+- name: Crash and network diagnostics
+  hosts: all
+  become: true
+  roles:
+    - crash_diagnostics

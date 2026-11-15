@@ -13,3 +13,15 @@ workers:
 gpu_nodes:
   hosts:
     tank:
+
+# Proxmox host (ThinkPad T430s). Not part of Kubernetes, so only the
+# diagnostics play targets it. Its apt sources cannot be refreshed without a
+# subscription, and it runs OPNsense, so the LAN targets are the cluster nodes.
+proxmox:
+  hosts:
+    pve:
+      ansible_host: 192.168.1.50
+      diag_apt_update_cache: false
+      diag_ping_targets:
+        - 192.168.1.8
+        - 192.168.1.9

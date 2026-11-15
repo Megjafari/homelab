@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Managed by Ansible (roles/crash_diagnostics).
+#
+# Summarises why the machine last went down or lost the network.
+# Usage: crash-report [N]   N = which previous boot to inspect (default 1 = the one before this)
+set -u
+N="${1:-1}"
+hr() { printf '\n\033[1m==== %s ====\033[0m\n' "$*"; }
+
+hr "Host and boots"
+hostname; uptime
+journalctl --list-boots 2>/dev/null | tail -8
+if [ ! -d /var/log/journal ]; then
+    echo "WARNING: /var/log/journal is missing, so the journal does not survive reboots."
+fi
+
+hr "Did the previous boot end cleanly? (boot -$N)"
+if journalctl -b "-$N" -q -n 1 >/dev/null 2>&1; then
+    journalctl -b "-$N" -q --no-pager 2>/dev/null \
+        | grep -E "Reached target.*(Power-Off|Reboot|Shutdown|Sleep|Suspend)|System is (powering|rebooting)|Powering off|Power key|Lid closed|Suspending|systemd-shutdown|Journal stopped" \
+        | tail -15
+    echo "(No lines above, and the log just stops = hard power loss, hang or crash with no clean shutdown.)"
+    echo
+    echo "Last 25 journal lines of boot -$N:"
+    journalctl -b "-$N" --no-pager -n 25 -o short-precise 2>/dev/null
+else
+    echo "No journal for boot -$N."
+fi
+
+hr "Kernel problems in boot -$N and the current boot"
+for b in "-$N" 0; do
+    echo "--- boot $b ---"
+    journalctl -k -b "$b" --no-pager -q 2>/dev/null \
+        | grep -iE "e1000e|Hardware Unit Hang|NETDEV WATCHDOG|link is down|Link Down|Reset adapter|thermal|critical temp|throttl|mce:|Machine check|Hardware Error|EDAC|I/O error|ata[0-9]+.*(error|reset|failed)|nvme.*(timeout|reset)|Out of memory|oom-kill|NVRM|Xid|BUG:|Oops|segfault|soft lockup|hung task|call trace|panic|md/raid.*(fail|degrad)" \
+        | tail -40
+done
+
+hr "Power events (lid, power key, suspend)"
+journalctl -u systemd-logind -b "-$N" --no-pager -q 2>/dev/null | tail -15
+
+hr "Last health-snapshot lines before the gap"
+if [ -r /var/log/health/health.log ]; then
+    echo "(Each line is one minute. Look at the last lines before the machine disappeared.)"
+    tail -n 8 /var/log/health/health.log
+    echo
+    echo "Network events:"
+    grep -h "EVENT" /var/log/health/health.log /var/log/health/health.log.1 2>/dev/null | tail -20
+    ls -1t /var/log/health/netfail-*.log 2>/dev/null | head -5 | sed 's/^/netfail dump: /'
+else
+    echo "No /var/log/health/health.log yet."
+fi
+
+hr "Boot and shutdown history (last -x)"
+last -x -n 15 2>/dev/null
+
+hr "Hardware error log (rasdaemon)"
+if command -v ras-mc-ctl >/dev/null 2>&1; then
+    ras-mc-ctl --summary 2>&1 | head -20
+    ras-mc-ctl --errors 2>&1 | tail -20
+else
+    echo "rasdaemon not installed."
+fi
+
+hr "Disk health"
+if command -v smartctl >/dev/null 2>&1; then
+    for d in $(lsblk -dno NAME,TYPE 2>/dev/null | awk '$2=="disk"{print "/dev/"$1}'); do
+        printf '%s: ' "$d"; smartctl -H "$d" 2>/dev/null | awk -F: '/overall-health|SMART Health Status/ {print $2}' | tr -d ' '
+    done
+fi
