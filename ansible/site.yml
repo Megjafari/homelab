@@ -16,6 +16,12 @@
   roles:
     - nvidia_gpu
 
+- name: Realtek NIC firmware
+  hosts: realtek_nic
+  become: true
+  roles:
+    - realtek_firmware
+
 - name: Crash and network diagnostics
   hosts: all
   become: true

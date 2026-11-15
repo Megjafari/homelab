@@ -1,0 +1,13 @@
+---
+# The RTL8168g NIC in tank logs "Unable to load firmware rtl_nic/rtl8168g-2.fw"
+# at every boot. The firmware is in the non-free-firmware component, which the
+# nvidia_gpu role already enables on tank.
+
+- name: Install Realtek NIC firmware
+  ansible.builtin.apt:
+    name: firmware-realtek
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  notify: Warn that a reboot is needed to load the NIC firmware
+  tags: [firmware]

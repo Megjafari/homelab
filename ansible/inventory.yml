@@ -14,6 +14,11 @@ gpu_nodes:
   hosts:
     tank:
 
+# Nodes with a Realtek RTL8168 NIC that needs firmware-realtek.
+realtek_nic:
+  hosts:
+    tank:
+
 # Proxmox host (ThinkPad T430s). Not part of Kubernetes, so only the
 # diagnostics play targets it. Its apt sources cannot be refreshed without a
 # subscription, and it runs OPNsense, so the LAN targets are the cluster nodes.

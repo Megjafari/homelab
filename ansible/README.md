@@ -32,6 +32,7 @@ ansible/
     ├── common/            # Baseline packages on every node
     ├── k8s_node_prereqs/  # Kubernetes host prerequisites
     ├── nvidia_gpu/        # NVIDIA driver and DKMS configuration
+    ├── realtek_firmware/  # NIC firmware for the Realtek RTL8168 in tank
     └── crash_diagnostics/ # Evidence for unexplained shutdowns and network loss
 ```
 
@@ -44,6 +45,7 @@ The inventory separates nodes by their role in the homelab:
 | `control_plane` | `nuke`        | Kubernetes control plane            |
 | `workers`       | `tank`        | Kubernetes worker nodes             |
 | `gpu_nodes`     | `tank`        | Nodes with a GPU used by Kubernetes |
+| `realtek_nic`   | `tank`        | Nodes whose Realtek NIC needs firmware |
 
 `tank` belongs to both `workers` and `gpu_nodes`, so the NVIDIA role only targets the node that actually has a GPU.
 
@@ -88,6 +90,10 @@ The role:
 * Runs `dkms autoinstall` to rebuild the kernel module for the currently running kernel
 
 This allows the GPU node to be recovered after a fresh installation or when the NVIDIA kernel module needs to be rebuilt after a kernel update.
+
+### `realtek_firmware`
+
+Runs on `realtek_nic` (`tank`). Installs `firmware-realtek`, because the RTL8168g NIC logged `Unable to load firmware rtl_nic/rtl8168g-2.fw` at every boot. The `r8169` driver loads the firmware when it starts, so a reboot is needed before it takes effect.
 
 ### `crash_diagnostics`
 
@@ -154,6 +160,7 @@ k8s
 swap
 cni
 gpu
+firmware
 diag
 ```
 

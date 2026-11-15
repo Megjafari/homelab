@@ -1,0 +1,6 @@
+---
+- name: Warn that a reboot is needed to load the NIC firmware
+  ansible.builtin.debug:
+    msg: >-
+      firmware-realtek was installed on {{ inventory_hostname }}. The r8169 driver loads
+      the firmware when it starts, so it takes effect after the next reboot.
