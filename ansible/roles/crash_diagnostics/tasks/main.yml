@@ -3,20 +3,20 @@
 # After the next crash, run `crash-report` on the machine.
 
 - name: Install diagnostic tools (best effort)
+  tags: [diag]
   block:
     - name: Install packages
       ansible.builtin.apt:
-        name: "{{ diag_packages }}"
+        name: "{{ crash_diagnostics_packages }}"
         state: present
-        update_cache: "{{ diag_apt_update_cache }}"
+        update_cache: "{{ crash_diagnostics_apt_update_cache }}"
         cache_valid_time: 3600
   rescue:
     - name: Warn that tools could not be installed
       ansible.builtin.debug:
         msg: >-
-          Could not install {{ diag_packages | join(', ') }} on {{ inventory_hostname }}.
+          Could not install {{ crash_diagnostics_packages | join(', ') }} on {{ inventory_hostname }}.
           health-snapshot and crash-report still work, they just skip the missing tools.
-  tags: [diag]
 
 - name: Ensure the persistent journal directory exists
   ansible.builtin.file:

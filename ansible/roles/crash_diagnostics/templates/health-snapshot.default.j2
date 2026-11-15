@@ -1,6 +1,6 @@
 # Managed by Ansible (roles/crash_diagnostics).
 # Hosts that must be reachable for the network to count as "up".
 # The network is reported down only when NONE of these answer.
-PING_TARGETS="{{ diag_ping_targets | join(' ') }}"
+PING_TARGETS="{{ crash_diagnostics_ping_targets | join(' ') }}"
 # Pinged and logged for context only; never triggers a network-down dump.
-PING_EXTRA="{{ diag_ping_extra | join(' ') }}"
+PING_EXTRA="{{ crash_diagnostics_ping_extra | join(' ') }}"

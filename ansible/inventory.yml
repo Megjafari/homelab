@@ -21,7 +21,7 @@ proxmox:
   hosts:
     pve:
       ansible_host: 192.168.1.50
-      diag_apt_update_cache: false
-      diag_ping_targets:
+      crash_diagnostics_apt_update_cache: false
+      crash_diagnostics_ping_targets:
         - 192.168.1.8
         - 192.168.1.9
