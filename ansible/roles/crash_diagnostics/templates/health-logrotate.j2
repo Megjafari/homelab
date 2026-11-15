@@ -1,0 +1,18 @@
+# Managed by Ansible (roles/crash_diagnostics).
+/var/log/health/health.log {
+    daily
+    rotate 30
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}
+
+/var/log/health/netfail-*.log {
+    weekly
+    rotate 8
+    compress
+    missingok
+    notifempty
+}

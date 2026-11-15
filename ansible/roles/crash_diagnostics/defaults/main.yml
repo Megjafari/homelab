@@ -1,0 +1,19 @@
+---
+# Hosts that must answer ping for the network to count as "up".
+crash_diagnostics_ping_targets:
+  - 192.168.1.1
+
+# Pinged and logged for context only.
+crash_diagnostics_ping_extra:
+  - 1.1.1.1
+
+# Tools used by health-snapshot and crash-report.
+crash_diagnostics_packages:
+  - lm-sensors
+  - smartmontools
+  - ethtool
+  - rasdaemon
+
+# Set to false on hosts whose apt sources cannot be refreshed
+# (for example Proxmox without a subscription).
+crash_diagnostics_apt_update_cache: true

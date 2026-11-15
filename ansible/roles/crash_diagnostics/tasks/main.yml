@@ -1,0 +1,118 @@
+---
+# Diagnostics only: this role records evidence and changes no behaviour.
+# After the next crash, run `crash-report` on the machine.
+
+- name: Install diagnostic tools (best effort)
+  tags: [diag]
+  block:
+    - name: Install packages
+      ansible.builtin.apt:
+        name: "{{ crash_diagnostics_packages }}"
+        state: present
+        update_cache: "{{ crash_diagnostics_apt_update_cache }}"
+        cache_valid_time: 3600
+  rescue:
+    - name: Warn that tools could not be installed
+      ansible.builtin.debug:
+        msg: >-
+          Could not install {{ crash_diagnostics_packages | join(', ') }} on {{ inventory_hostname }}.
+          health-snapshot and crash-report still work, they just skip the missing tools.
+
+- name: Ensure the persistent journal directory exists
+  ansible.builtin.file:
+    path: /var/log/journal
+    state: directory
+    owner: root
+    group: systemd-journal
+    mode: "2755"
+  notify: Restart journald
+  tags: [diag]
+
+- name: Ensure journald drop-in directory exists
+  ansible.builtin.file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    mode: "0755"
+  tags: [diag]
+
+- name: Configure journald to persist and sync often
+  ansible.builtin.template:
+    src: journald-persistent.conf.j2
+    dest: /etc/systemd/journald.conf.d/10-persistent.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart journald
+  tags: [diag]
+
+- name: Ensure health log directory exists
+  ansible.builtin.file:
+    path: /var/log/health
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  tags: [diag]
+
+- name: Install health-snapshot and crash-report
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - health-snapshot
+    - crash-report
+  tags: [diag]
+
+- name: Configure health-snapshot targets
+  ansible.builtin.template:
+    src: health-snapshot.default.j2
+    dest: /etc/default/health-snapshot
+    owner: root
+    group: root
+    mode: "0644"
+  tags: [diag]
+
+- name: Install health-snapshot systemd units
+  ansible.builtin.template:
+    src: "health-snapshot.{{ item }}.j2"
+    dest: "/etc/systemd/system/health-snapshot.{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - service
+    - timer
+  notify: Reload systemd
+  tags: [diag]
+
+- name: Rotate health logs
+  ansible.builtin.template:
+    src: health-logrotate.j2
+    dest: /etc/logrotate.d/health
+    owner: root
+    group: root
+    mode: "0644"
+  tags: [diag]
+
+- name: Apply systemd changes before enabling the timer
+  ansible.builtin.meta: flush_handlers
+  tags: [diag]
+
+- name: Enable and start the health-snapshot timer
+  ansible.builtin.systemd:
+    name: health-snapshot.timer
+    enabled: true
+    state: started
+  when: not ansible_check_mode  # the unit file does not exist yet in a dry run
+  tags: [diag]
+
+- name: Enable rasdaemon if installed
+  ansible.builtin.systemd:
+    name: rasdaemon
+    enabled: true
+    state: started
+  failed_when: false
+  tags: [diag]
