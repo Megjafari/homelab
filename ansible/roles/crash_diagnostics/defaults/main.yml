@@ -3,9 +3,15 @@
 crash_diagnostics_ping_targets:
   - 192.168.1.1
 
-# Pinged and logged for context only.
+# Pinged and logged for context only; they never trigger network_down on their own.
+# The default gateway is always pinged too. A host never pings itself.
+# Having the other nodes and the switch here shows WHICH hop fails when the
+# gateway or the internet goes away.
 crash_diagnostics_ping_extra:
   - 1.1.1.1
+  - 192.168.1.174 # Zyxel switch
+  - 192.168.1.8   # nuke
+  - 192.168.1.50  # pve
 
 # Tools used by health-snapshot and crash-report.
 crash_diagnostics_packages:

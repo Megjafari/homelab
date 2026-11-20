@@ -100,8 +100,9 @@ Runs on `realtek_nic` (`tank`). Installs `firmware-realtek`, because the RTL8168
 Runs on every host, including the Proxmox host `pve`. It records evidence and changes no behaviour:
 
 * Makes the journal persistent and flushes it every 10 seconds
-* `health-snapshot` runs every minute and logs one line to `/var/log/health/health.log` (and the journal): load, memory, temperatures, fans, AC/battery, NIC state and error counters, GPU, and ping results. The file is fsync'd, so after a hard power-off the last line shows the final minute
-* When no ping target answers it logs `EVENT network_down` and writes a full dump (`ip`, `ethtool`, offloads, kernel log) to `/var/log/health/netfail-*.log`
+* `health-snapshot` runs every minute and logs one line to `/var/log/health/health.log` (and the journal): load, memory, temperatures, fans, AC/battery, NIC state with a link-flap counter, GPU, Proxmox VM state, the default gateway (with its ARP state), and ping results for the other nodes, the switch and the internet. The file is fsync'd, so after a hard power-off the last line shows the final minute
+* `EVENT` lines mark what changed: `boot` (with how long the machine was gone), `target_down`/`target_up` (which hop failed), `gateway_down`/`gateway_up` and `network_down`/`network_up`
+* While the gateway or network is down it writes a full dump (`ip`, `ethtool`, offloads, link flaps, VM list, kernel log, recent warnings) to `/var/log/health/netfail-*.log`, at most one every 10 minutes
 * `crash-report` summarises the previous boot: clean or hard shutdown, lid and power-key events, kernel errors (NIC hangs, thermal, MCE, OOM, Xid, disks), and the last health lines
 
 After the next incident, SSH in and run `crash-report`.
