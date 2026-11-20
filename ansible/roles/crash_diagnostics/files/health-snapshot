@@ -2,29 +2,63 @@
 # Managed by Ansible (roles/crash_diagnostics).
 #
 # Runs once a minute from health-snapshot.timer and writes ONE line describing
-# the machine: load, memory, temperatures, fans, power/battery, NIC state and
-# error counters, GPU, and whether the LAN/internet is reachable.
+# the machine: load, memory, temperatures, fans, power/battery, NIC state, link
+# flap counter, GPU, VM state (Proxmox), the default gateway and whether the
+# LAN and the internet are reachable.
 #
 # The file is fsync'd on every run, so after a hard power-off the last line
-# shows what the machine looked like in its final minute. When the network
-# goes away it also writes a detailed dump to /var/log/health/netfail-*.log.
+# shows what the machine looked like in its final minute.
+#
+# EVENT lines mark the moments that matter:
+#   boot            first run after a boot, with how long the machine was gone
+#   target_down/up  one ping target changed state (shows WHICH hop failed)
+#   gateway_down/up the default gateway stopped/started answering
+#   network_down/up no PING_TARGETS answer at all
+# A gateway or network outage also writes a full dump to
+# /var/log/health/netfail-*.log (at most one every 10 minutes).
 set -u
 
-[ -r /etc/default/health-snapshot ] && . /etc/default/health-snapshot
+# The HEALTH_* variables exist so the script can be tested without touching the real log.
+CONF="${HEALTH_CONF:-/etc/default/health-snapshot}"
+[ -r "$CONF" ] && . "$CONF"
 PING_TARGETS="${PING_TARGETS:-192.168.1.1}"
 PING_EXTRA="${PING_EXTRA:-1.1.1.1}"
-LOG_DIR=/var/log/health
+LOG_DIR="${HEALTH_LOG_DIR:-/var/log/health}"
 LOG="$LOG_DIR/health.log"
-STATE=/run/health-snapshot.net-state
-DUMP_STAMP=/run/health-snapshot.last-dump
+STATE_DIR="${HEALTH_STATE_DIR:-/run/health-snapshot}"   # in /run, so it is gone after a reboot
+DUMP_STAMP="$STATE_DIR/last-dump"
 
 mkdir -p "$LOG_DIR"
+first_run=0
+if [ ! -d "$STATE_DIR" ]; then
+    mkdir -p "$STATE_DIR"
+    first_run=1
+fi
 
 have() { command -v "$1" >/dev/null 2>&1; }
+event() {   # event <text>: one line in the log and in the journal
+    printf '%s EVENT %s\n' "$ts" "$*" >> "$LOG"
+    logger -t health-snapshot -p user.warning -- "EVENT $*"
+}
+
+ts=$(date -Is)
+now=$(date +%s)
+uptime_s=$(cut -d' ' -f1 /proc/uptime)
+uptime_s=${uptime_s%.*}
+
+# --- how long was the machine gone before this boot? ------------------------
+if [ "$first_run" = 1 ]; then
+    prev_ts=$(tail -n1 "$LOG" 2>/dev/null | cut -d' ' -f1)
+    boot_epoch=$((now - uptime_s))
+    if [ -n "$prev_ts" ] && prev_epoch=$(date -d "$prev_ts" +%s 2>/dev/null); then
+        event "boot prev_log_end=$prev_ts gap_before_boot=$((boot_epoch - prev_epoch))s"
+    else
+        event "boot prev_log_end=none"
+    fi
+fi
 
 # --- basics -----------------------------------------------------------------
 read -r l1 l5 l15 _ < /proc/loadavg
-uptime_s=$(cut -d' ' -f1 /proc/uptime)
 mem_avail_mb=$(awk '/^MemAvailable/ {print int($2/1024)}' /proc/meminfo)
 swap_used_mb=$(awk '/^SwapTotal/ {t=$2} /^SwapFree/ {f=$2} END {print int((t-f)/1024)}' /proc/meminfo)
 
@@ -56,7 +90,7 @@ for p in /sys/class/power_supply/*; do
     esac
 done
 
-# --- physical NICs ----------------------------------------------------------
+# --- physical NICs (flaps = how many times the link went up or down) --------
 nics=""
 for n in /sys/class/net/*; do
     name=${n##*/}
@@ -64,8 +98,9 @@ for n in /sys/class/net/*; do
     carrier=$(cat "$n/carrier" 2>/dev/null || echo "?")
     oper=$(cat "$n/operstate" 2>/dev/null || echo "?")
     speed=$(cat "$n/speed" 2>/dev/null || echo "?")
+    flaps=$(cat "$n/carrier_changes" 2>/dev/null || echo "?")
     s="$n/statistics"
-    nics="$nics $name=$oper,carrier=$carrier,speed=${speed},rxerr=$(cat $s/rx_errors 2>/dev/null),txerr=$(cat $s/tx_errors 2>/dev/null),rxdrop=$(cat $s/rx_dropped 2>/dev/null),txdrop=$(cat $s/tx_dropped 2>/dev/null)"
+    nics="$nics $name=$oper,carrier=$carrier,speed=${speed},flaps=$flaps,rxerr=$(cat $s/rx_errors 2>/dev/null),txerr=$(cat $s/tx_errors 2>/dev/null),rxdrop=$(cat $s/rx_dropped 2>/dev/null),txdrop=$(cat $s/tx_dropped 2>/dev/null)"
 done
 
 # --- GPU --------------------------------------------------------------------
@@ -76,50 +111,97 @@ if have nvidia-smi; then
     [ -n "$gpu" ] || gpu="nvidia-smi-failed"
 fi
 
-# --- reachability -----------------------------------------------------------
-ok=0; total=0; ping_res=""
+# --- Proxmox virtual machines (OPNsense runs here) --------------------------
+vms=""
+if have qm; then
+    vms=$(timeout 5 qm list 2>/dev/null | awk 'NR>1 {printf " vm%s=%s", $1, $3}')
+    [ -n "$vms" ] || vms=" vms=qm-list-failed"
+fi
+
+# --- gateway ----------------------------------------------------------------
+gw=$(ip -4 route show default 2>/dev/null | awk '{print $3; exit}')
+gw_neigh="n/a"
+[ -n "$gw" ] && gw_neigh=$(ip neigh show "$gw" 2>/dev/null | awk '{print $NF; exit}')
+[ -n "$gw_neigh" ] || gw_neigh="none"
+
+# --- reachability (all targets in parallel, so a bad network stays fast) ----
+local_addrs=" $(ip -o -4 addr show 2>/dev/null | awk '{split($4,a,"/"); printf "%s ", a[1]}')"
+is_local() { case "$local_addrs" in *" $1 "*) return 0 ;; esac; return 1; }
+
+all_targets=""
+for t in $PING_TARGETS $PING_EXTRA $gw; do
+    is_local "$t" && continue
+    case " $all_targets " in *" $t "*) ;; *) all_targets="$all_targets $t" ;; esac
+done
+
+tmp=$(mktemp -d)
+for t in $all_targets; do
+    ( ping -c1 -W1 "$t" >/dev/null 2>&1 && : > "$tmp/$t.up" ) &
+done
+wait
+reach() { [ -e "$tmp/$1.up" ]; }
+
+ping_res=""; ok=0; total=0
 for t in $PING_TARGETS; do
+    is_local "$t" && continue
     total=$((total + 1))
-    if ping -c1 -W1 "$t" >/dev/null 2>&1; then ok=$((ok + 1)); ping_res="$ping_res $t=up"
-    else ping_res="$ping_res $t=DOWN"; fi
+    if reach "$t"; then ok=$((ok + 1)); fi
 done
-for t in $PING_EXTRA; do
-    if ping -c1 -W1 "$t" >/dev/null 2>&1; then ping_res="$ping_res $t=up"
-    else ping_res="$ping_res $t=DOWN"; fi
+for t in $all_targets; do
+    if reach "$t"; then ping_res="$ping_res $t=up"; else ping_res="$ping_res $t=DOWN"; fi
 done
 
-ts=$(date -Is)
-line="$ts up=${uptime_s%.*}s load=$l1/$l5/$l15 mem_avail=${mem_avail_mb}MB swap_used=${swap_used_mb}MB temp_max=${temp_max_c}C fan_max=${fan_max}rpm ac=$ac bat=$bat gpu=${gpu:-n/a} ping:${ping_res} nic:${nics}"
+gw_state="n/a"
+if [ -n "$gw" ]; then
+    if reach "$gw"; then gw_state=up; else gw_state=DOWN; fi
+fi
 
+line="$ts up=${uptime_s}s load=$l1/$l5/$l15 mem_avail=${mem_avail_mb}MB swap_used=${swap_used_mb}MB temp_max=${temp_max_c}C fan_max=${fan_max}rpm ac=$ac bat=$bat gpu=${gpu:-n/a}${vms} gw=${gw:-none}:$gw_state/neigh=$gw_neigh ping:${ping_res} nic:${nics}"
 printf '%s\n' "$line" >> "$LOG"
 logger -t health-snapshot -- "$line"
 
-# --- network up/down transitions -------------------------------------------
-prev=$(cat "$STATE" 2>/dev/null || echo "up")
-if [ "$ok" -eq 0 ] && [ "$total" -gt 0 ]; then
-    cur=down
-else
-    cur=up
-fi
-echo "$cur" > "$STATE"
+# --- one event per target that changed state --------------------------------
+for t in $all_targets; do
+    cur=up; reach "$t" || cur=down
+    prev=$(cat "$STATE_DIR/target-$t" 2>/dev/null || echo "")
+    if [ -n "$prev" ] && [ "$prev" != "$cur" ]; then event "target_$cur $t"; fi
+    echo "$cur" > "$STATE_DIR/target-$t"
+done
+rm -rf "$tmp"
 
-if [ "$cur" = down ]; then
-    if [ "$prev" = up ]; then
-        printf '%s EVENT network_down (no PING_TARGETS reachable)\n' "$ts" >> "$LOG"
-        logger -t health-snapshot -p user.warning -- "EVENT network_down"
-    fi
-    # Dump details at most every 10 minutes while the outage lasts.
-    now=$(date +%s)
+# --- gateway and network state ----------------------------------------------
+gw_prev=$(cat "$STATE_DIR/gateway" 2>/dev/null || echo "")
+net_prev=$(cat "$STATE_DIR/net" 2>/dev/null || echo "")
+gw_cur=up; [ "$gw_state" = DOWN ] && gw_cur=down
+net_cur=up; [ "$total" -gt 0 ] && [ "$ok" -eq 0 ] && net_cur=down
+echo "$gw_cur" > "$STATE_DIR/gateway"
+echo "$net_cur" > "$STATE_DIR/net"
+
+if [ -n "$gw_prev" ] && [ "$gw_prev" != "$gw_cur" ]; then event "gateway_$gw_cur ${gw:-none} neigh=$gw_neigh"; fi
+if [ -n "$net_prev" ] && [ "$net_prev" != "$net_cur" ]; then event "network_$net_cur"; fi
+if [ "$first_run" = 1 ] && { [ "$net_cur" = down ] || [ "$gw_cur" = down ]; }; then
+    event "outage_at_boot gateway=$gw_state network=$net_cur"
+fi
+
+# --- dump details while the gateway or network is down ----------------------
+if [ "$gw_cur" = down ] || [ "$net_cur" = down ]; then
     last=$(cat "$DUMP_STAMP" 2>/dev/null || echo 0)
     if [ $((now - last)) -ge 600 ]; then
         echo "$now" > "$DUMP_STAMP"
         out="$LOG_DIR/netfail-$(date +%Y%m%d-%H%M%S).log"
         {
-            echo "### netfail dump $ts"
+            echo "### netfail dump $ts  gateway=${gw:-none}:$gw_state network=$net_cur"
             echo; echo "## ip -s link";  ip -s link
             echo; echo "## ip addr";     ip addr
             echo; echo "## ip route";    ip route
             echo; echo "## ip neigh";    ip neigh
+            echo; echo "## link flap counters"
+            for n in /sys/class/net/*; do
+                [ -r "$n/carrier_changes" ] && echo "${n##*/}: $(cat "$n/carrier_changes")"
+            done
+            echo; echo "## ping gateway x3"; [ -n "$gw" ] && ping -c3 -W1 "$gw"
+            have bridge && { echo; echo "## bridge link"; bridge link; }
+            have qm && { echo; echo "## qm list"; timeout 10 qm list; }
             for n in /sys/class/net/*; do
                 name=${n##*/}
                 [ -e "$n/device" ] || continue
@@ -131,13 +213,11 @@ if [ "$cur" = down ]; then
                 fi
             done
             echo; echo "## kernel log (last 150 lines)"; dmesg -T 2>/dev/null | tail -150
+            echo; echo "## warnings, last 15 minutes"; journalctl --since "-15min" -p warning --no-pager -q 2>/dev/null | tail -60
             echo; echo "## sensors"; have sensors && sensors
         } > "$out" 2>&1
         sync -f "$out" 2>/dev/null || true
     fi
-elif [ "$prev" = down ]; then
-    printf '%s EVENT network_up\n' "$ts" >> "$LOG"
-    logger -t health-snapshot -p user.warning -- "EVENT network_up"
 fi
 
 sync -f "$LOG" 2>/dev/null || sync
