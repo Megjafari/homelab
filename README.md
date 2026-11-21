@@ -1,4 +1,6 @@
-<h1 align="center">homelab</h1>
+<p align="center">
+  <img src="docs/readme-banner.svg" alt="homelab: self-hosted Kubernetes, GitOps and infrastructure as code" width="100%" />
+</p>
 
 <p align="center">
   A self-hosted Kubernetes homelab described as code and operated through Git —
