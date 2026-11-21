@@ -14,7 +14,7 @@ export default function TextReveal({ text, className = "" }) {
       return undefined;
     }
     const n = spans.length;
-    const DIM = 0.16;
+    const DIM = 0.36;
     let ticking = false;
     const update = () => {
       ticking = false;
