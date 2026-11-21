@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Signal concept">
+  <rect width="512" height="512" rx="124" fill="#163B38"/>
+  <path d="M112 322c0-78 63-141 141-141s141 63 141 141" fill="none" stroke="#DDEDE8" stroke-width="42" stroke-linecap="round"/>
+  <path d="M164 322c0-49 40-89 89-89s89 40 89 89" fill="none" stroke="#DDEDE8" stroke-width="42" stroke-linecap="round" opacity=".82"/>
+  <path d="M216 322c0-20 16-37 37-37s37 17 37 37" fill="none" stroke="#DDEDE8" stroke-width="42" stroke-linecap="round" opacity=".64"/>
+  <circle cx="112" cy="322" r="12" fill="#F0A77B"/>
+  <circle cx="394" cy="322" r="12" fill="#F0A77B"/>
+  <path d="M178 376h150" stroke="#DDEDE8" stroke-width="24" stroke-linecap="round"/>
+</svg>
