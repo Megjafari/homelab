@@ -19,20 +19,34 @@ export const FLIPS = [
 
 export const PROJECTS = [
   {
-    title: "LIAHub",
-    category: "Fullstack",
-    description:
-      "Job and internship discovery for Swedish tech students, with filtering and application tracking. Built solo.",
-    tags: ["ASP.NET Core", "React", "PostgreSQL"],
-    source: "https://github.com/Megjafari/liahub-backend",
-    demo: "https://liahub.meghdadjafari.dev",
+    title: "Selah",
+    category: "PWA",
+    description: "A personal Bible study app with highlights, notes and reading history. Clean Architecture with tests.",
+    tags: ["Angular", "ASP.NET Core", "PostgreSQL"],
+    source: "https://github.com/Megjafari/selah",
+    demo: "https://selah.meghdadjafari.dev",
   },
   {
-    title: "ProxmoxDash",
+    title: "ProxDash",
     category: "Dashboard",
     description: "Real-time monitoring and control of a Proxmox homelab, with a browser-based SSH terminal.",
     tags: ["SignalR", "React", "JWT"],
-    source: "https://github.com/Megjafari/_ProxmoxDash",
+    source: "https://github.com/Megjafari/proxdash",
+  },
+  {
+    title: "Platform Pipelines",
+    category: "CI/CD",
+    description:
+      "A library of reusable GitHub Actions workflows with policy checks. Projects pin a version, so a fix lands everywhere with one bump.",
+    tags: ["GitHub Actions", "Open Policy Agent", "CI/CD"],
+    source: "https://github.com/Megjafari/platform-pipelines",
+  },
+  {
+    title: "dev-digest",
+    category: "Automation",
+    description: "Collects developer news and job ads, summarizes them with Claude and posts a daily digest to Discord.",
+    tags: [".NET", "GitHub Actions", "Claude API"],
+    source: "https://github.com/Megjafari/dev-digest",
   },
   {
     title: "Debugged API",
@@ -40,22 +54,6 @@ export const PROJECTS = [
     description: "A bug knowledge base that surfaces similar past solutions. Clean Architecture and CQRS.",
     tags: [".NET", "CQRS", "PostgreSQL"],
     source: "https://github.com/Megjafari/debugged-api",
-  },
-  {
-    title: "Kaizen",
-    category: "PWA",
-    description: "Fitness tracking as an installable app, with Auth0 sign-in and weight history.",
-    tags: ["React", "ASP.NET Core", "Auth0"],
-    source: "https://github.com/Megjafari/kaizen-API",
-    demo: "https://kaizen.meghdadjafari.dev",
-  },
-  {
-    title: "ShipTrack",
-    category: "Dashboard",
-    description: "Logistics dashboard with shipment tracking and carrier recommendations.",
-    tags: ["ASP.NET Core", "React"],
-    source: "https://github.com/Megjafari/shiptrack-api",
-    demo: "https://shiptrack.meghdadjafari.dev",
   },
 ];
 
