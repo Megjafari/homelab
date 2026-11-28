@@ -21,7 +21,7 @@ spec:
             value: "1"
       containers:
       - name: gluetun
-        image: qmcgaw/gluetun:latest@sha256:3c43ec327d7ab2b5f1dc798b92a7640de9a1e1b74a81c9a5143adb383c03d28b
+        image: qmcgaw/gluetun:latest@sha256:6d21823e204e99adbb0aa811105504514d16150cc5299f443f191c28792fcf4b
         resources:
           requests:
             cpu: 50m
